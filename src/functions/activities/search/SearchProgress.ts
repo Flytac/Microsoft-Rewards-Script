@@ -26,6 +26,10 @@ export class SearchProgress {
         return this.calculateMissing(await this.getCounters(), isMobile)
     }
 
+    /**
+     * counters 是服务器计数器，isMobile 决定 totalPoints 使用哪个平台。
+     * 返回各平台缺口；桌面总缺口包含单独识别的 Edge 配额。
+     */
     public calculateMissing(counters: Counters, isMobile: boolean): MissingSearchPoints {
         const quotas = this.calculateQuotas(counters)
         const mobilePoints = quotas.mobile.remaining
@@ -40,6 +44,10 @@ export class SearchProgress {
         }
     }
 
+    /**
+     * 把 pcSearch 中显式标记 Edge 的项分出，避免桌面与 Edge 重复统计。
+     * mobileSearch 全部汇总，不能假定每个平台只有第一个计数器有效。
+     */
     public calculateQuotas(counters: Counters): SearchQuotas {
         const pcCounters = counters.pcSearch ?? []
         const explicitEdgeCounters = pcCounters.filter(counter => this.isEdgeCounter(counter))
@@ -54,6 +62,10 @@ export class SearchProgress {
         }
     }
 
+    /**
+     * 把每项最大值限制到非负，已得值限制在 0 到最大值之间，再求和。
+     * 这是对服务器异常值的容错；返回 earned、max、remaining，而非搜索次数。
+     */
     private summarize(counters: DashboardImpression[]): SearchQuota {
         return counters.reduce<SearchQuota>(
             (quota, counter) => {

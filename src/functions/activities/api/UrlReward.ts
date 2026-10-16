@@ -7,6 +7,10 @@ export class UrlReward extends BaseActivity {
         await this.runUrlReward(promotion, true)
     }
 
+    /**
+     * promotion 为活动数据，allowSessionRepair 控制是否允许修复后再试一次。
+     * 先确认动态 action 标识、活动存在且可报告，再提交；以服务端余额变化判断收益，保留无积分活动分支。
+     */
     private async runUrlReward(promotion: BasePromotion, allowSessionRepair: boolean) {
         const offerId = promotion.offerId
 
@@ -133,6 +137,10 @@ export class UrlReward extends BaseActivity {
         }
     }
 
+    /**
+     * 返回是否已成功刷新上下文并执行重试，不表示奖励一定到账。
+     * 重试调用把 allowSessionRepair 设为 false，防止递归修复无穷重复。
+     */
     private async retryAfterRequestFailure(promotion: BasePromotion, allowSessionRepair: boolean): Promise<boolean> {
         if (!allowSessionRepair) return false
 

@@ -17,6 +17,9 @@ export class SearchQueryQueue {
         private readonly queryCore = new QueryCore(bot)
     ) {}
 
+    /**
+     * 按需初始化主题池，返回主题数；不预先获取所有主题的建议词，避免启动时集中网络请求。
+     */
     async prepare(): Promise<number> {
         if (!this.topics.length) await this.refillTopics()
         this.bot.logger.debug(
@@ -27,6 +30,10 @@ export class SearchQueryQueue {
         return this.topics.length
     }
 
+    /**
+     * 返回下一个查询词，确实没有新主题/查询时返回 null。
+     * 先耗尽当前主题簇再扩展下一个；seenQueries 在入队时记录，防止不同主题生成重复词。
+     */
     async next(): Promise<string | null> {
         while (!this.activeCluster.length) {
             if (this.activeMainTopic) {
@@ -93,6 +100,10 @@ export class SearchQueryQueue {
         return topic
     }
 
+    /**
+     * 首次读取允许复用主题缓存，之后请求刷新；排除见过的主题并重置索引。
+     * 返回新增可用主题数，零值让上层结束，避免无新内容时无限补充。
+     */
     private async refillTopics(): Promise<number> {
         const topics = await this.queryCore.getConfiguredSearchTopics(this.refillCount > 0)
         this.refillCount++

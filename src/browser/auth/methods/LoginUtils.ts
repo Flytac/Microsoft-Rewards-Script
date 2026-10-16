@@ -8,10 +8,17 @@ export interface PromptOptions {
     transform?: (input: string) => string
 }
 
+/**
+ * 只有 stdin 是交互终端才允许提问。桌面程序的管道输入和 API 子进程通常不是 TTY。
+ */
 export function canPromptForInput(): boolean {
     return process.stdin.isTTY === true
 }
 
+/**
+ * options 包含问题、超时、可选转换与校验；返回输入文本或 null。
+ * 超时、无交互终端或校验失败会得到 null；cleanup 用 resolved 防止超时和回答重复结算 Promise。
+ */
 export function promptInput(options: PromptOptions): Promise<string | null> {
     if (!canPromptForInput()) return Promise.resolve(null)
 

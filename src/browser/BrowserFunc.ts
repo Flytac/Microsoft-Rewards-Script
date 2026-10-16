@@ -25,6 +25,10 @@ export default class BrowserFunc {
         this.bot = bot
     }
 
+    /**
+     * cookies 可选，返回统一 DashboardData；本模块把不同来源的数据适配成活动层使用的结构。
+     * 调用方不必重复知道网页快照与仪表盘传输细节。
+     */
     async getDashboardData(cookies?: Cookie[]): Promise<DashboardData> {
         const fingerprintHeaders = { ...(this.bot.fingerprint?.headers ?? {}) }
         delete fingerprintHeaders['Cookie']
@@ -270,6 +274,10 @@ export default class BrowserFunc {
         }
     }
 
+    /**
+     * page 为已登录页面，返回 Promise<void>，结果写入 bot 的快照、路由树和 nextActions。
+     * 同时读取 earn 与 dashboard，因为单页不一定包含全部活动数据和脚本块。
+     */
     async bootstrap(page: Page): Promise<void> {
         try {
             // /earn is the offers page
@@ -521,6 +529,10 @@ export default class BrowserFunc {
         return [...seen]
     }
 
+    /**
+     * browser 实际是 BrowserContext，email 用于保存归属；persistSession 控制是否落盘。
+     * finally 尝试关闭上下文及根浏览器，即使保存失败也继续释放资源。
+     */
     async closeBrowser(browser: BrowserContext, email: string, persistSession = true) {
         const rootBrowser = browser.browser?.() || null
 
@@ -607,6 +619,10 @@ export default class BrowserFunc {
         return targetUrl ? this.filterCookiesForUrl(cookies, targetUrl) : cookies
     }
 
+    /**
+     * 把当前活动会话保存为检查点；source 用于日志来源标签，返回成功与否。
+     * 检查点让长任务中更新的登录状态有机会落盘，而不是只依赖正常退出。
+     */
     async checkpointActiveSession(source = 'SESSION-CHECKPOINT'): Promise<boolean> {
         const page = this.getActivePage()
         if (!page) {
@@ -899,6 +915,10 @@ export default class BrowserFunc {
     }
 
     // Fire a nextjs RSC server action shared by UrlReward / ClaimReward / ClaimBonusPoints
+    /**
+     * 封装 Rewards 服务端 action 的调用；其参数和返回结构属于站点协议。
+     * 上层活动复用此传输入口，中文化只解释职责，不翻译 action 名称、请求字段或 Cookie。
+     */
     async reportServerAction(
         actionId: string,
         body: unknown[],

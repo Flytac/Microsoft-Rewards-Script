@@ -8,6 +8,10 @@ export class DailyCheckIn extends BaseActivity {
 
     private oldBalance: number = this.bot.userData.currentPoints
 
+    /**
+     * 没有 App accessToken 就跳过；提交后以服务器返回余额减旧余额计算收益。
+     * HTTP 请求完成不等于增加积分，因此仅正增量更新 bot 的积分统计。
+     */
     public async doDailyCheckIn() {
         if (!this.bot.accessToken) {
             this.bot.logger.warn(
@@ -70,6 +74,10 @@ export class DailyCheckIn extends BaseActivity {
         }
     }
 
+    /**
+     * 构造现有签到协议并返回 HTTP 响应；请求体 type、channel、headers 都是协议字段。
+     * randomUUID 为该请求提供标识；不可为了中文化改字段或将令牌加入日志。
+     */
     private async submitDaily() {
         try {
             const jsonData = {

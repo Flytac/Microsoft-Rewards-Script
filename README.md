@@ -1,5 +1,16 @@
 # Microsoft Rewards Script 中文学习版
 
+## 零基础学习与源码注释
+
+- [按执行顺序学习：启动 → 配置 → 登录 → 浏览器 → 任务 → 日志](docs/zh-CN/learning/README.md)
+- [整个仓库的文件地图](docs/zh-CN/repository-map.md)
+- [上游使用说明中文对照](docs/zh-CN/upstream-guide.md)与[中文 API 教程](docs/zh-CN/api-tutorial.md)
+- [Windows 原生运行教程](docs/zh-CN/learning/06-windows.md)
+- [独立 Windows 桌面 App 可行性分析（仅分析，尚未开发）](docs/zh-CN/windows-desktop-feasibility.md)
+- [中文化范围、实施计划与验证记录](docs/zh-CN/localization-plan.md)
+
+中文注释位于主要调用链和复杂控制边界，保留原标识符、英文日志与运行行为。英文原版继续保留在 README.en.md，API 英文参考仍在 scripts/api/README.md。
+
 这是 [TheNetsky/Microsoft-Rewards-Script](https://github.com/TheNetsky/Microsoft-Rewards-Script) 的 fork，增加面向初学者的中文说明。原作者与许可证保留，程序功能和配置键名保持原样。
 
 文档对应：v4 分支、package.json 版本 4.3.2，核对日期 2026-10-16。上游基准提交：`d0f07d74a0ed4dda127855d6e3dde98bf4c89d6e`。以后同步上游时，需要重新核对说明。
@@ -24,38 +35,38 @@
 
 ## 先认识这些词
 
-| 名称 | 通俗解释 |
-| --- | --- |
-| Fork | 在你的 GitHub 账号下保留一份与原仓库有关联的副本 |
-| Clone | 把仓库文件和 Git 历史下载到电脑 |
-| 分支 v4 | 同一个仓库中的一条版本开发线 |
-| Node.js | 让电脑运行 JavaScript 的环境 |
-| npm | 随 Node.js 提供的包管理工具，用于安装依赖、执行预定义命令 |
-| TypeScript / .ts | 带类型信息的源码，通常先编译成 JavaScript 再执行 |
-| headless | 浏览器运行但不显示窗口 |
-| session | 保存的登录状态；与账号密码一样不适合公开 |
-| API | 其他程序通过 HTTP 请求调用的控制入口 |
-| Docker | 将程序及运行环境打包成容器的方式 |
-| cron | 定时任务表达式，用来规定什么时候运行 |
+| 名称             | 通俗解释                                                  |
+| ---------------- | --------------------------------------------------------- |
+| Fork             | 在你的 GitHub 账号下保留一份与原仓库有关联的副本          |
+| Clone            | 把仓库文件和 Git 历史下载到电脑                           |
+| 分支 v4          | 同一个仓库中的一条版本开发线                              |
+| Node.js          | 让电脑运行 JavaScript 的环境                              |
+| npm              | 随 Node.js 提供的包管理工具，用于安装依赖、执行预定义命令 |
+| TypeScript / .ts | 带类型信息的源码，通常先编译成 JavaScript 再执行          |
+| headless         | 浏览器运行但不显示窗口                                    |
+| session          | 保存的登录状态；与账号密码一样不适合公开                  |
+| API              | 其他程序通过 HTTP 请求调用的控制入口                      |
+| Docker           | 将程序及运行环境打包成容器的方式                          |
+| cron             | 定时任务表达式，用来规定什么时候运行                      |
 
 ## 哪个文件管什么
 
-| 文件或目录 | 作用 |
-| --- | --- |
-| `env.example` → `.env` | 账号邮箱、可选密码、地区、代理等；只在自己的电脑/服务器填写 |
-| `config.example.json` → `config.json` | 任务开关、等待时间、通知等 |
-| `package.json` | 版本、依赖和 npm 命令清单 |
-| `src/index.ts` | 主程序，组织账号、浏览器、任务和结果统计 |
-| `src/browser/` | 浏览器与登录、页面和会话相关逻辑 |
-| `src/functions/activities/` | 各种 Rewards 活动的具体实现 |
-| `src/util/` | 配置读取、校验、HTTP、会话等公共功能 |
-| `scripts/main/` | 构建资源复制、手动登录、会话管理工具 |
-| `scripts/api/` | 可选的 HTTP 控制服务 |
-| `scripts/docker/` | Docker 启动和运行辅助脚本 |
-| `dist/` | 编译生成的 JavaScript，不是主要源码编辑位置 |
-| `compose.yaml` | Docker 镜像、目录挂载、定时设置 |
-| `sessions/` | 登录会话持久化目录 |
-| `diagnostics/` | 开启诊断后保存的错误资料，分享前检查隐私 |
+| 文件或目录                            | 作用                                                        |
+| ------------------------------------- | ----------------------------------------------------------- |
+| `env.example` → `.env`                | 账号邮箱、可选密码、地区、代理等；只在自己的电脑/服务器填写 |
+| `config.example.json` → `config.json` | 任务开关、等待时间、通知等                                  |
+| `package.json`                        | 版本、依赖和 npm 命令清单                                   |
+| `src/index.ts`                        | 主程序，组织账号、浏览器、任务和结果统计                    |
+| `src/browser/`                        | 浏览器与登录、页面和会话相关逻辑                            |
+| `src/functions/activities/`           | 各种 Rewards 活动的具体实现                                 |
+| `src/util/`                           | 配置读取、校验、HTTP、会话等公共功能                        |
+| `scripts/main/`                       | 构建资源复制、手动登录、会话管理工具                        |
+| `scripts/api/`                        | 可选的 HTTP 控制服务                                        |
+| `scripts/docker/`                     | Docker 启动和运行辅助脚本                                   |
+| `dist/`                               | 编译生成的 JavaScript，不是主要源码编辑位置                 |
+| `compose.yaml`                        | Docker 镜像、目录挂载、定时设置                             |
+| `sessions/`                           | 登录会话持久化目录                                          |
+| `diagnostics/`                        | 开启诊断后保存的错误资料，分享前检查隐私                    |
 
 ## 本机运行：每一步在做什么
 
@@ -100,14 +111,14 @@ npm run build
 npm run start
 ```
 
-| 命令 | 实际作用 |
-| --- | --- |
-| `pre-build` | 安装 npm 依赖、清理旧 dist、下载 Patchright Chromium |
-| `build` | 清理 dist、用 tsc 编译、复制搜索词 JSON 资源 |
-| `start` | 执行 dist/index.js，开始实际运行 |
-| `lint` | 静态检查代码 |
-| `format:check` | 检查格式 |
-| `api` | 启动控制服务，本机模式下不会立即开始积分任务 |
+| 命令           | 实际作用                                             |
+| -------------- | ---------------------------------------------------- |
+| `pre-build`    | 安装 npm 依赖、清理旧 dist、下载 Patchright Chromium |
+| `build`        | 清理 dist、用 tsc 编译、复制搜索词 JSON 资源         |
+| `start`        | 执行 dist/index.js，开始实际运行                     |
+| `lint`         | 静态检查代码                                         |
+| `format:check` | 检查格式                                             |
+| `api`          | 启动控制服务，本机模式下不会立即开始积分任务         |
 
 首次安装需要网络，浏览器下载会占用空间。看到安装成功只表示依赖就绪；还要区分编译成功、登录成功、活动完成、积分到账。
 
@@ -142,15 +153,15 @@ npm run clear-sessions -- email user@example.com
 
 准备好 `.env` 后，阅读 compose 中这些字段：
 
-| 字段 | 含义 |
-| --- | --- |
-| `TZ: America/Toronto` | 上游默认时区；如需香港时间可改为 `Asia/Hong_Kong` |
-| `CRON_SCHEDULE: '0 7 * * *'` | 在所配置时区每天 07:00 触发计划 |
-| `RUN_ON_START: 'true'` | 容器启动后也会触发运行 |
+| 字段                         | 含义                                                   |
+| ---------------------------- | ------------------------------------------------------ |
+| `TZ: America/Toronto`        | 上游默认时区；如需香港时间可改为 `Asia/Hong_Kong`      |
+| `CRON_SCHEDULE: '0 7 * * *'` | 在所配置时区每天 07:00 触发计划                        |
+| `RUN_ON_START: 'true'`       | 容器启动后也会触发运行                                 |
 | `SKIP_RANDOM_SLEEP: 'false'` | 保留启动流程的随机等待，因此不一定恰好在触发时开始任务 |
-| `./config` 挂载 | 保存容器使用的配置 |
-| `./sessions` 挂载 | 保存会话，容器重建后仍可保留 |
-| `restart: unless-stopped` | Docker 重启策略，不等于每日定时计划 |
+| `./config` 挂载              | 保存容器使用的配置                                     |
+| `./sessions` 挂载            | 保存会话，容器重建后仍可保留                           |
+| `restart: unless-stopped`    | Docker 重启策略，不等于每日定时计划                    |
 
 ```bash
 docker compose up -d
@@ -177,18 +188,18 @@ API 修改的计划保存在 `config/schedule.json`，优先于基础 `CRON_SCHE
 
 ## 常见问题怎么判断
 
-| 现象 | 先检查什么 |
-| --- | --- |
-| node/npm 找不到 | Node.js 是否安装，终端是否重开，版本是否至少 24 |
-| No accounts found in environment | .env 文件名、位置、ACCOUNT_N_EMAIL 是否有效且未被注释 |
-| config.json not found | 是否复制示例到项目根目录，是否进入正确目录 |
-| JSON 解析错误 | 是否混入注释、中文标点、末尾逗号或漏引号 |
-| 找不到浏览器可执行文件 | pre-build 的浏览器下载是否成功；可执行 npm run install:browser |
-| 登录反复失败 | 先看具体登录提示，再尝试手动登录；只清理有问题的账号会话 |
-| 改配置没效果 | 是否重启进程，Docker CONFIG_* 是否覆盖该字段 |
-| 启动 API 后没任务 | API 只是控制服务，需要通过 POST /start 或仪表盘启动 |
-| API 返回 401 | 请求是否携带与服务端一致的令牌 |
-| 任务完成但积分没变 | 查看服务端返回、活动状态、配额和具体错误；不要仅凭日志“结束”判断 |
+| 现象                             | 先检查什么                                                       |
+| -------------------------------- | ---------------------------------------------------------------- |
+| node/npm 找不到                  | Node.js 是否安装，终端是否重开，版本是否至少 24                  |
+| No accounts found in environment | .env 文件名、位置、ACCOUNT_N_EMAIL 是否有效且未被注释            |
+| config.json not found            | 是否复制示例到项目根目录，是否进入正确目录                       |
+| JSON 解析错误                    | 是否混入注释、中文标点、末尾逗号或漏引号                         |
+| 找不到浏览器可执行文件           | pre-build 的浏览器下载是否成功；可执行 npm run install:browser   |
+| 登录反复失败                     | 先看具体登录提示，再尝试手动登录；只清理有问题的账号会话         |
+| 改配置没效果                     | 是否重启进程，Docker CONFIG_* 是否覆盖该字段                     |
+| 启动 API 后没任务                | API 只是控制服务，需要通过 POST /start 或仪表盘启动              |
+| API 返回 401                     | 请求是否携带与服务端一致的令牌                                   |
+| 任务完成但积分没变               | 查看服务端返回、活动状态、配额和具体错误；不要仅凭日志“结束”判断 |
 
 ## 许可证与中文化范围
 

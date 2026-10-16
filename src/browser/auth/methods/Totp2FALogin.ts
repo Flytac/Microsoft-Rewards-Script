@@ -13,6 +13,10 @@ export class TotpLogin {
 
     constructor(private bot: MicrosoftRewardsBot) {}
 
+    /**
+     * secret 为验证器共享密钥；返回此时生成的六位验证码。
+     * 共享密钥不是六位验证码本身，必须保密；时间同步会影响验证码有效性。
+     */
     private generateTotpCode(secret: string): string {
         return new OTPAuth.TOTP({ secret, digits: 6 }).generate()
     }
@@ -48,6 +52,10 @@ export class TotpLogin {
         }
     }
 
+    /**
+     * page 为认证页，totpSecret 可选；有密钥时生成并填写，无密钥时走原有人工输入路径。
+     * 方法完成无业务返回值，失败会按实现记录/处理；不要在中文说明中插入真实验证码或共享密钥。
+     */
     async handle(page: Page, totpSecret?: string): Promise<void> {
         try {
             this.bot.logger.info(this.bot.isMobile, 'LOGIN-TOTP', 'TOTP 2FA authentication requested')

@@ -56,6 +56,10 @@ function stripHtml(text: string): string {
     return text.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ')
 }
 
+/**
+ * 将查询词去首尾空格、合并空白并转小写，返回用于去重的键。
+ * 这是比较规则，不是中文翻译，也不代表原始搜索词必须被改写。
+ */
 export function normalizeQueryKey(query: string): string {
     return query.trim().replace(/\s+/g, ' ').toLowerCase()
 }
@@ -63,6 +67,10 @@ export function normalizeQueryKey(query: string): string {
 export class QueryCore {
     constructor(private bot: MicrosoftRewardsBot) {}
 
+    /**
+     * options 指定来源、语言、地区及是否洗牌；返回规范化去重后的主题列表。
+     * 各来源并发读取，多数远端来源失败回退空列表，让其他来源仍可贡献主题。
+     */
     async queryManager(options: QueryManagerOptions = {}): Promise<string[]> {
         const {
             shuffle = false,

@@ -41,6 +41,10 @@ function consoleOut(level: LogLevel, msg: string, chalkFn: ChalkFn | null): void
     }
 }
 
+/**
+ * 把普通消息中的换行转为字面量转义，Error 堆栈压为单行。
+ * API 按行读取子进程输出，保持一条事件一行可避免把堆栈误拆成多个事件。
+ */
 function formatMessage(message: string | Error): string {
     if (!(message instanceof Error)) return message.replace(/\r?\n/g, '\\n')
 
@@ -73,6 +77,10 @@ export class Logger {
         return this.baseLog('debug', isMobile, title, message, color)
     }
 
+    /**
+     * 统一日志入口：level 级别、isMobile 平台、title 模块、message 内容、color 可选颜色。
+     * 控制台和 webhook 分别过滤；工作进程通过 IPC 把通知交给主进程，避免各进程独立发送。
+     */
     private baseLog(
         level: LogLevel,
         isMobile: Platform,
@@ -138,6 +146,10 @@ export class Logger {
         }
     }
 
+    /**
+     * 返回是否放行日志；级别、关键词、正则之间是任一命中，而不是全部满足。
+     * 白名单无规则时不放行，黑名单无规则时放行；无效正则被忽略。
+     */
     private shouldPassFilter(filter: LogFilter | undefined, level: LogLevel, message: string): boolean {
         if (!filter || !filter.enabled) {
             return true

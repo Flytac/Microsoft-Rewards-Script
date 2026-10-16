@@ -8,6 +8,10 @@ function valueFrom(sourceEnv, key) {
     return trimmed || undefined
 }
 
+/**
+ * 将参数配置转为字符串数组；优先 JSON 数组，否则按空白拆分。
+ * 空白拆分不是 shell 引号解析，含空格的路径应放在 JSON 数组的单独元素里。
+ */
 export function parseRunArgs(value) {
     if (!value) return []
     const trimmed = String(value).trim()
@@ -20,6 +24,10 @@ export function parseRunArgs(value) {
     return trimmed.split(/\s+/).filter(Boolean)
 }
 
+/**
+ * 根据项目目录/环境决定可执行程序和参数；优先已编译 dist，否则退回 ts-node。
+ * Windows npm.cmd 特殊转换为 Node + npm-cli.js，其他批处理被拒绝，避免引入 shell 解释与注入风险。
+ */
 export function resolveRunCommand({
     projectRoot,
     sourceEnv = process.env,

@@ -17,6 +17,10 @@ export class SearchManager {
         this.progress = new SearchProgress(bot)
     }
 
+    /**
+     * 返回 SearchPlan：是否执行两端搜索以及各自缺口。
+     * 桌面执行额度合并 desktop 与 edge，移动端独立；配置关闭或剩余为零时不安排对应平台。
+     */
     async getSearchPoints(): Promise<SearchPlan> {
         const counters = await this.progress.getCounters()
         const quotas = this.progress.calculateQuotas(counters)
@@ -63,6 +67,10 @@ export class SearchManager {
         return this.search(account, false)
     }
 
+    /**
+     * account 与 isMobile 建立异步上下文后调用活动门面；Promise<number> 表示报告的积分数。
+     * 异常被记录后转为 0，因此 0 既可能是没有收益，也可能是搜索失败，需结合日志判断。
+     */
     private search(account: Account, isMobile: boolean): Promise<number> {
         const platform = isMobile ? 'Mobile' : 'Desktop'
         const page = isMobile ? this.bot.mainMobilePage : this.bot.mainDesktopPage

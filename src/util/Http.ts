@@ -26,6 +26,10 @@ export interface HttpResponse<T = unknown> {
     config: HttpRequestConfig
 }
 
+/**
+ * 合并默认请求头和单次请求头，以不区分大小写的名称覆盖。
+ * HTTP 头名称不区分大小写，直接对象展开可能留下两个不同大小写的同名键。
+ */
 export function mergeRequestHeaders(
     defaultHeaders: Record<string, unknown>,
     requestHeaders: Record<string, unknown> = {}
@@ -87,6 +91,10 @@ function toInit(config: HttpRequestConfig): { url: string; init: ImpitRequestIni
     return { url, init }
 }
 
+/**
+ * 把响应体解析为 JSON 或文本，并保留响应头与原请求配置。
+ * 泛型 T 只是静态类型提示，不验证服务器 JSON 的真实结构。
+ */
 async function toResponse<T>(res: ImpitResponse, config: HttpRequestConfig): Promise<HttpResponse<T>> {
     const text = await res.text()
 
@@ -122,6 +130,10 @@ function backoff(retry: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms))
 }
 
+/**
+ * 统一发送、状态检查与重试；config.retries 表示额外重试上限，循环包含首次尝试。
+ * 网络/HTTP 异常仍可能最终抛出，调用者必须区分传输成功和业务成功。
+ */
 async function send<T>(
     instance: Impit,
     url: string,

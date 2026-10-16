@@ -335,6 +335,10 @@ function setByPath<T>(obj: T, path: ReadonlyArray<string | number>, value: unkno
     return cloned as T
 }
 
+/**
+ * 递归补齐缺失的对象字段；data 为用户输入，defaults 为内部默认配置。
+ * 已有但类型错误的值先保留，交给模式校验处理；返回新对象，避免直接改写调用方的输入。
+ */
 function fillMissing(data: unknown, defaults: unknown, path = ''): unknown {
     if (!isPlainObject(defaults)) return data
     if (!isPlainObject(data)) {
@@ -357,6 +361,10 @@ function fillMissing(data: unknown, defaults: unknown, path = ''): unknown {
     return result
 }
 
+/**
+ * 输入 unknown，输出可信的 Config。先补缺失值，再用 Zod 检查。
+ * 失败时按错误路径尝试回填默认值并再次校验；仍失败则抛错，并非所有错误都能自动修复。
+ */
 export function validateConfig(data: unknown): Config {
     const filled = fillMissing(data, defaultConfig)
     let result = ConfigSchema.safeParse(filled)
@@ -378,6 +386,10 @@ export function validateConfig(data: unknown): Config {
     return result.data as Config
 }
 
+/**
+ * 账号校验返回 Account[]，无效时记录字段路径并抛错。
+ * 账号与一般行为配置不同：不能用猜测的邮箱/认证信息静默补齐。
+ */
 export function validateAccounts(data: unknown): Account[] {
     const result = z.array(AccountSchema).safeParse(data)
     if (result.success) return result.data
@@ -401,6 +413,10 @@ export function validateAccounts(data: unknown): Account[] {
     throw new Error(`Accounts validation failed: ${result.error.issues.length} issue(s) - see logs above`)
 }
 
+/**
+ * 从 package.json.engines.node 读取版本约束，检查当前 Node.js。
+ * 不满足时退出进程；会话模块依赖 node:sqlite，桌面打包也必须匹配运行时。
+ */
 export function checkNodeVersion(): void {
     try {
         const requiredVersion = pkg.engines?.node

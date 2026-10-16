@@ -3,6 +3,10 @@ import type { DashboardData } from '../../../interface/DashboardData'
 import { PromotionActivityRunner } from './PromotionActivityRunner'
 
 export class DailySet extends BaseActivity {
+    /**
+     * data 为统一仪表盘数据；按今天的日期选择未完成且有积分的每日任务，再交给共享分发器。
+     * 返回 void 只表示这一批处理结束；每项是否成功仍应看具体活动和服务器状态。
+     */
     public async run(data: DashboardData): Promise<void> {
         const today = this.bot.utils.getFormattedDate()
         const pending =

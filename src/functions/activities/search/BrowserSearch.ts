@@ -27,6 +27,10 @@ interface SessionStats {
 export class Search extends BaseActivity {
     private searchCount = 0
 
+    /**
+     * page 是对应设备页面，isMobile 区分配额；返回搜索会话统计的积分增量。
+     * finally 尝试回到 Bing 首页，即使任务失败也执行页面收尾。
+     */
     public async doSearch(page: Page, isMobile: boolean): Promise<number> {
         const startBalance = Number(this.bot.userData.currentPoints ?? 0)
         this.bot.logger.info(isMobile, 'SEARCH-BING', `Starting Bing searches | currentBalance=${startBalance}`)
@@ -82,6 +86,10 @@ export class Search extends BaseActivity {
         return stats.totalGained
     }
 
+    /**
+     * tracker 抽象“如何准备、计算收益、判断完成”，让普通/额外搜索共享查询执行循环。
+     * 返回 totalGained、performed、stagnant；配额完成、次数上限、连续无收益或词池耗尽都会结束。
+     */
     private async runSearchSession(page: Page, isMobile: boolean, tracker: SearchTracker): Promise<SessionStats> {
         const stats: SessionStats = { totalGained: 0, performed: 0, stagnant: 0 }
 
@@ -148,6 +156,10 @@ export class Search extends BaseActivity {
             return stats
         }
     }
+    /**
+     * 执行一个查询词的页面输入、回车、可选滚动/点击及等待；成功返回 void，最终尝试失败会抛错。
+     * 这里负责浏览器动作；是否得到积分由外层 tracker.measure 再检查，输入成功不等于计分成功。
+     */
     private async bingSearch(page: Page, query: string, isMobile: boolean): Promise<void> {
         this.searchCount++
 
@@ -282,6 +294,10 @@ class PointsTracker implements SearchTracker {
         return true
     }
 
+    /**
+     * 重新读取剩余配额，用前后缺口差的非负值估计本次增量，再更新当前统计。
+     * 该值来自配额变化，并非浏览器点击次数；服务端延迟或额度变化会影响观察。
+     */
     async measure(): Promise<number> {
         const updated = await this.searchProgress.getMissing(this.isMobile)
         const gained = Math.max(0, this.missing.totalPoints - updated.totalPoints)

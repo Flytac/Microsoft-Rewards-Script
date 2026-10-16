@@ -28,6 +28,10 @@ import type { BasePromotion, DashboardData } from '../interface/DashboardData'
 import type { AppDashboardData, Promotion } from '../interface/AppDashBoardData'
 import type { QuestChild } from '../browser/ReactFunc'
 
+/**
+ * 活动门面：主流程只调用 doXxx，具体任务在各目录独立实现。
+ * 持有同一个 bot 以共享配置、HTTP 与统计；这里按实验开关选择实现，不应在调用方复制判断。
+ */
 export default class Activities {
     private bot: MicrosoftRewardsBot
 
@@ -35,6 +39,10 @@ export default class Activities {
         this.bot = bot
     }
 
+    /**
+     * page 为浏览器页，isMobile 为设备类型；返回本次搜索实现报告的积分数。
+     * API 路径不使用 page，浏览器路径会使用；保持相同接口便于上层统一调度。
+     */
     doSearch = async (page: Page, isMobile: boolean): Promise<number> => {
         if (this.bot.config.experimental.apiSearch) {
             return await new ApiSearch(this.bot).doSearch(isMobile)
@@ -49,6 +57,10 @@ export default class Activities {
         return await new BrowserSearch(this.bot).doBonusSearches(page)
     }
 
+    /**
+     * promotion 是活动元数据，page 为当前页；完成后无业务返回值。
+     * 实验路径执行后立即 return，避免同一活动再重复执行浏览器版本。
+     */
     doSearchOnBing = async (promotion: BasePromotion, page: Page): Promise<void> => {
         if (this.bot.config.experimental.apiSearchOnBing) {
             await new ApiSearchOnBing(this.bot).doSearchOnBing(promotion)

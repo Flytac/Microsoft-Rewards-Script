@@ -140,6 +140,10 @@ export interface OverrideError {
     message: string
 }
 
+/**
+ * env 为环境变量字典；只计算已登记 CONFIG_* 的类型转换，返回 applied 与 errors，不写文件。
+ * 先完整收集错误，避免一部分值应用后才发现另一部分格式无效。
+ */
 export function computeOverrides(env: NodeJS.ProcessEnv = process.env): {
     applied: ComputedOverride[]
     errors: OverrideError[]
@@ -176,6 +180,10 @@ export interface ApplyReport {
     errors: OverrideError[]
 }
 
+/**
+ * configPath 指向目标 JSON；无转换错误后才读取、应用强制项和用户覆盖，并原子写回。
+ * 这段逻辑由容器入口等显式调用，不能假设本机普通 start 自动执行全部覆盖。
+ */
 export function applyEnvOverrides(configPath: string, env: NodeJS.ProcessEnv = process.env): ApplyReport {
     const { applied, errors } = computeOverrides(env)
     if (errors.length > 0) {

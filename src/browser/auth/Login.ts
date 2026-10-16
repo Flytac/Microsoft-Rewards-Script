@@ -90,6 +90,10 @@ export class Login {
         this.recoveryLogin = new RecoveryLogin(this.bot)
     }
 
+    /**
+     * page 是当前浏览器页，account 是账号配置；成功完成验证与保存后结束，致命失败向上抛错。
+     * 登录页面可能按不同顺序出现，因此用“检测状态→处理状态”的循环，而非固定点击序列。
+     */
     async login(page: Page, account: Account) {
         try {
             suspendMediaBlocking(this.bot, page.context())
@@ -107,6 +111,10 @@ export class Login {
             await this.bot.browser.utils.reloadBadPage(page)
             await this.bot.browser.utils.disableFido(page)
 
+            /**
+             * 限制总循环次数，并另外计算同状态重复次数；分别约束长流程和卡在同一页面的情况。
+             * 这些计数是原有恢复策略，不应在翻译时改变阈值或等待时间。
+             */
             const maxIterations = 25
             let iteration = 0
             let previousState: LoginState = 'UNKNOWN'
@@ -177,6 +185,10 @@ export class Login {
         }
     }
 
+    /**
+     * 读取 URL 和可见元素，返回 LoginState。多个候选元素并发检测后按优先级选一个状态。
+     * 这里的 LOGGED_IN 是页面判断，后续 finalizeLogin 仍会获取 Rewards 上下文，不能当作积分功能已验证。
+     */
     private async detectCurrentState(page: Page): Promise<LoginState> {
         await page.waitForLoadState('domcontentloaded', { timeout: 3000 }).catch(() => {})
 
@@ -456,6 +468,10 @@ export class Login {
         return true
     }
 
+    /**
+     * state 为检测结果，page/account 为当前页面及账号；返回是否继续登录循环。
+     * 各 case 分派到邮箱、密码、验证码等处理器；返回 true 通常只表示可以继续观察，并不表示最终成功。
+     */
     private async handleState(state: LoginState, page: Page, account: Account): Promise<boolean> {
         this.bot.logger.debug(this.bot.isMobile, 'HANDLE-STATE', `Processing state: ${state}`)
 
@@ -866,6 +882,10 @@ export class Login {
         }
     }
 
+    /**
+     * 登录收尾：访问 Rewards、验证 Bing、bootstrap 活动上下文，再保存 storageState。
+     * 媒体拦截放在认证完成之后，避免登录所需图片、二维码或视频被提前阻断。
+     */
     private async finalizeLogin(page: Page, account: Account) {
         this.bot.logger.info(this.bot.isMobile, 'LOGIN', 'Finalizing login')
 
@@ -910,6 +930,10 @@ export class Login {
         this.bot.logger.info(this.bot.isMobile, 'LOGIN', 'Login completed, session saved')
     }
 
+    /**
+     * 以有限循环检查 Bing 登录状态。部分分支只警告后继续，移动端判断也较宽松。
+     * 阅读调用者时要区分“此方法返回”和“账号在所有业务接口上认证成功”。
+     */
     async verifyBingSession(page: Page, account: Account) {
         const url = URLs.auth.bingSignIn
         const loopMax = 5
@@ -973,6 +997,10 @@ export class Login {
         }
     }
 
+    /**
+     * 调用 BrowserFunc.bootstrap 取得页面快照与服务端 action 标识；失败转换为上层可识别异常。
+     * 这些动态标识会随网站部署改变，所以不能写死在中文说明或配置里。
+     */
     private async getRewardsSession(page: Page) {
         this.bot.logger.info(this.bot.isMobile, 'GET-REWARD-SESSION', 'Bootstrapping rewards context')
 
@@ -1018,6 +1046,10 @@ export class Login {
         }
     }
 
+    /**
+     * 为移动应用活动获取访问令牌；email 用于账号流程，返回值来自 MobileAccessLogin.get。
+     * 该令牌不同于本地 Control API 的 API_TOKEN，不要混用或写入示例文档。
+     */
     async getAppAccessToken(page: Page, email: string) {
         this.bot.logger.info(this.bot.isMobile, 'GET-APP-TOKEN', 'Requesting mobile access token')
         return await new MobileAccessLogin(this.bot, page).get(email)

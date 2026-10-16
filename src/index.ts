@@ -60,6 +60,10 @@ interface AccountRunResult {
 
 const executionContext = new AsyncLocalStorage<ExecutionContext>()
 
+/**
+ * 读取当前异步调用链的账号与设备上下文；没有上下文时返回默认值。
+ * AsyncLocalStorage 避免手机/电脑并发时通过一个共享布尔变量互相覆盖设备状态。
+ */
 export function getCurrentContext(): ExecutionContext {
     const context = executionContext.getStore()
     if (!context) {
@@ -68,6 +72,10 @@ export function getCurrentContext(): ExecutionContext {
     return context
 }
 
+/**
+ * timeoutMs 为通知队列等待上限。allSettled 等待全部队列结算，一个失败不会跳过其他队列。
+ * 最后关闭 SQLite 会话库，属于退出前的资源收尾，不代表通知一定送达。
+ */
 async function flushAllWebhooks(timeoutMs = 5000): Promise<void> {
     await Promise.allSettled([flushDiscordQueue(timeoutMs), flushNtfyQueue(timeoutMs), flushTelegramQueue(timeoutMs)])
     closeSessionStore()
@@ -230,6 +238,9 @@ export class MicrosoftRewardsBot {
         }
     }
 
+    /**
+     * 加载并校验账号，提示已启用的实验选项；Promise<void> 表示异步完成但不返回业务值。
+     */
     async initialize(): Promise<void> {
         this.accounts = loadAccounts()
         this.warnExperimental()
@@ -262,6 +273,10 @@ export class MicrosoftRewardsBot {
         }
     }
 
+    /**
+     * 运行调度入口。clusters 大于 1 时区分主进程与工作进程，否则直接处理全部账号。
+     * 集群是多个 Node 进程；同一账号内部的 Promise 并发是另一层概念。
+     */
     async run(): Promise<void> {
         const totalAccounts = this.accounts.length
         const runStartTime = Date.now()
@@ -283,6 +298,10 @@ export class MicrosoftRewardsBot {
         }
     }
 
+    /**
+     * runStartTime 是整轮起始时间戳。主进程把账号拆成非空块，错开启动 worker，并汇总统计/通知。
+     * 通过 exitedWorkers 去重退出事件；全部 worker 退出后输出总计并按 worker 失败情况设置退出码。
+     */
     private async runMaster(runStartTime: number): Promise<void> {
         void this.logger.info('main', 'CLUSTER-PRIMARY', `Primary process started | PID: ${process.pid}`)
 
@@ -374,6 +393,10 @@ export class MicrosoftRewardsBot {
         })
     }
 
+    /**
+     * 注册 IPC 消息处理器，收到账号块后才执行任务，再把统计通过 process.send 发给主进程。
+     * 方法本身返回 void：注册监听器不等于任务已经完成。
+     */
     private runWorker(runStartTimeFromMaster?: number): void {
         void this.logger.info('main', 'CLUSTER-WORKER-START', `Worker spawned | PID: ${process.pid}`)
 
@@ -406,6 +429,11 @@ export class MicrosoftRewardsBot {
         })
     }
 
+    /**
+     * accounts 为本进程负责的账号，runStartTime 用于总耗时；返回每个账号的统计数组。
+     * 逐账号等待、解析地区、创建 HTTP 客户端并运行 Main；异常转为失败统计，继续后续账号。
+     * 单集群主进程路径会直接 process.exit，因此不应把本文件当作无副作用库导入桌面 UI。
+     */
     private async runTasks(accounts: Account[], runStartTime: number): Promise<AccountStats[]> {
         const accountStats: AccountStats[] = []
 
@@ -538,6 +566,10 @@ export class MicrosoftRewardsBot {
         return accountStats
     }
 
+    /**
+     * nextEmail 仅用于日志；读取最小/最大等待值并验证区间，再随机取毫秒数等待。
+     * 这里控制账号间隔，不是搜索间隔，也不负责每日定时调度。
+     */
     private async waitBeforeNextAccount(nextEmail?: string): Promise<void> {
         const { min, max } = this.config.accountDelay
         const minMs = typeof min === 'number' ? min : this.utils.stringToNumber(min)
@@ -558,6 +590,10 @@ export class MicrosoftRewardsBot {
         await this.utils.wait(delayMs)
     }
 
+    /**
+     * account 为当前账号；返回电脑端 context 和 fingerprint。
+     * 电脑与移动端使用独立上下文，让 Cookie、设备信息和页面引用各自对应正确设备。
+     */
     async createDesktopSession(account: Account): Promise<BrowserSession> {
         const session = await this.browserFactory.createBrowser(account)
         this.mainDesktopPage = await session.context.newPage()
@@ -572,6 +608,11 @@ export class MicrosoftRewardsBot {
         return session
     }
 
+    /**
+     * 单账号业务流程：建立会话、取得仪表盘数据，按开关和配额执行活动，返回起始积分与收集积分。
+     * 普通浏览器路径和实验 API 路径分开组织；不要把其中一条路径的执行顺序当成全部模式。
+     * 结束/异常时仍需处理后台活动与浏览器资源，详见此函数的 try/finally。
+     */
     async Main(account: Account): Promise<AccountRunResult> {
         const accountEmail = account.email
         this.logger.info('main', 'FLOW', `Starting session for ${accountEmail}`)
@@ -968,6 +1009,10 @@ export class MicrosoftRewardsBot {
 
 export { executionContext }
 
+/**
+ * 进程入口：检查 Node 版本、建立 bot、安装退出/异常处理器，然后初始化并启动。
+ * 底部直接调用 main()，因此 import 此文件也会触发入口；学习测试应避免导入它执行真实账号任务。
+ */
 async function main(): Promise<void> {
     checkNodeVersion()
     const rewardsBot = new MicrosoftRewardsBot()

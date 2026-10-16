@@ -56,6 +56,10 @@ export class ProcessManager extends EventEmitter {
         this._finalized = false
     }
 
+    /**
+     * overrides 可覆盖参数/环境；仅 idle 时允许启动，返回 pid、开始时间与命令信息。
+     * spawn 事件才标记 running；返回 pid 或服务启动成功都不代表账号业务成功。
+     */
     start(overrides = {}) {
         if (this.state !== 'idle') {
             const err = new Error(`Cannot start: a run is already ${this.state}.`)
@@ -282,6 +286,10 @@ export class ProcessManager extends EventEmitter {
         return env
     }
 
+    /**
+     * 操作系统按字节块推送输出，一次 chunk 可能含多行或半行。
+     * 分别缓存 stdout/stderr，遇换行才送入解析器；结束时由 _flushPartial 处理余下半行。
+     */
     _ingest(source, chunk) {
         const bufKey = source === 'stderr' ? '_stderrBuf' : '_stdoutBuf'
         this[bufKey] += chunk.toString('utf8')
@@ -339,6 +347,10 @@ export class ProcessManager extends EventEmitter {
         this.emit('status', { reason, ...this.getStatus() })
     }
 
+    /**
+     * 终止所属任务的进程树：Windows 使用 taskkill /T /F，POSIX 优先向进程组发信号。
+     * Windows 分支实际为强制终止，不具备 POSIX SIGTERM 的同等优雅清理保证。
+     */
     _killTree(signal) {
         if (!this.child || this.pid == null) return
         try {
@@ -354,6 +366,10 @@ export class ProcessManager extends EventEmitter {
         } catch {}
     }
 
+    /**
+     * 统一收尾并记录历史；error 与 exit 事件可能先后发生，用 _finalized 避免重复执行。
+     * 清空 child/pid 并回到 idle，再广播状态，供 UI 切换按钮和结束等待。
+     */
     _finalize(code, signal, errorMessage = null) {
         if (this._finalized) return
         this._finalized = true

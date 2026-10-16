@@ -6,6 +6,10 @@ export class EmailLogin {
 
     constructor(private bot: MicrosoftRewardsBot) {}
 
+    /**
+     * page 为登录页面，email 为账号邮箱；返回 ok 或 error，表示本次填写/提交步骤的结果。
+     * 先检查输入框和按钮是否可见，再清空填写；页面变化可能导致元素不存在。
+     */
     async enterEmail(page: Page, email: string): Promise<'ok' | 'error'> {
         try {
             const emailInputSelector = 'input[type="email"]'
@@ -57,6 +61,10 @@ export class EmailLogin {
         }
     }
 
+    /**
+     * password 只用于页面填写；返回联合类型，但当前实现的显式返回为 ok/error。
+     * 提交密码不等于完整登录完成，后续二步验证由 Login 的状态循环继续识别。
+     */
     async enterPassword(page: Page, password: string): Promise<'ok' | 'needs-2fa' | 'error'> {
         try {
             const passwordInputSelector = 'input[type="password"]'

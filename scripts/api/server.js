@@ -183,6 +183,10 @@ function sendJson(res, status, obj) {
     res.end(body)
 }
 
+/**
+ * 提取 Bearer 或 X-API-Key；URL token 只接受 /events，供不能自定义请求头的 EventSource。
+ * 不要扩展到所有路径，否则令牌更容易出现在访问日志和浏览器历史。
+ */
 function tokenFromReq(req, url) {
     const auth = req.headers['authorization']
     if (typeof auth === 'string') {
@@ -196,6 +200,10 @@ function tokenFromReq(req, url) {
     return null
 }
 
+/**
+ * 认证令牌等长时使用 timingSafeEqual 比较；不同长度直接失败。
+ * 这是服务端比对策略，不是令牌加密，也不能代替 HTTPS 或本地回环隔离。
+ */
 function safeEqual(a, b) {
     const bufA = Buffer.from(String(a))
     const bufB = Buffer.from(String(b))
@@ -210,6 +218,10 @@ function isAuthorized(req, url) {
     return safeEqual(provided, TOKEN)
 }
 
+/**
+ * 按字节限制接收请求体，空体解析成 {}，非法 JSON 拒绝。
+ * 限制大小避免客户端无限占内存；读取 JSON 不代表已经通过具体业务参数校验。
+ */
 async function readJsonBody(req, limitBytes = 1_000_000) {
     return new Promise((resolve, reject) => {
         let size = 0
@@ -251,6 +263,10 @@ function readForce(body) {
     return body.force ?? false
 }
 
+/**
+ * 建立 SSE 长连接：发送初始状态、按 Last-Event-ID 补发缓存日志，再推送实时事件。
+ * 这不是 WebSocket；客户端断开时需移除监听器，防止重连不断积累订阅。
+ */
 function handleEventStream(req, res, url) {
     res.writeHead(200, {
         'Content-Type': 'text/event-stream; charset=utf-8',

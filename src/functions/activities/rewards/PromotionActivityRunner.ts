@@ -2,6 +2,10 @@ import { BaseActivity } from '../BaseActivity'
 import type { BasePromotion } from '../../../interface/DashboardData'
 
 export class PromotionActivityRunner extends BaseActivity {
+    /**
+     * promotions 为待处理活动列表；逐项执行，单项失败记录后继续，项间保留原有等待。
+     * 异常隔离防止一个不支持/失败的活动让整批任务中止。
+     */
     public async run(promotions: BasePromotion[]): Promise<void> {
         for (const [index, promotion] of promotions.entries()) {
             try {
@@ -21,6 +25,10 @@ export class PromotionActivityRunner extends BaseActivity {
         }
     }
 
+    /**
+     * 识别 promotionType 与名称后分派；仅支持 urlreward 类型，再区分 ExploreOnBing。
+     * 执行前检查对应 activities 开关，未知类型直接记录跳过，不凭标题猜测操作。
+     */
     private async runPromotion(promotion: BasePromotion): Promise<void> {
         const type = promotion.promotionType?.toLowerCase() ?? ''
         const name = promotion.name?.toLowerCase() ?? ''

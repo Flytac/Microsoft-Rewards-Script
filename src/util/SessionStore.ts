@@ -42,6 +42,10 @@ function removeExpiredCookies(storageState: StorageState): {
     }
 }
 
+/**
+ * sessionPath 是会话目录；懒初始化并复用当前进程的 SQLite 连接。
+ * WAL 与 busy_timeout 用来协调数据库访问；POSIX chmod 在 Windows 上不是等价的完整 ACL 保护。
+ */
 function getDb(sessionPath: string): DatabaseSync {
     if (db) return db
 
@@ -81,6 +85,10 @@ function getDb(sessionPath: string): DatabaseSync {
     return db
 }
 
+/**
+ * 按目录、邮箱、设备读取会话；可选 maxAgeMs 限制整条记录年龄，未找到/过期返回 null。
+ * 移除过期 Cookie 后会更新数据库，所以该读取函数也可能产生磁盘写入。
+ */
 export function loadSession(
     sessionPath: string,
     email: string,
@@ -115,6 +123,10 @@ export function loadSession(
     }
 }
 
+/**
+ * storageState 是浏览器导出的 Cookie/站点存储；以邮箱和设备为联合键 UPSERT。
+ * 冲突时只更新状态及时间，不覆盖已有 fingerprint，避免两类保存操作互相擦除。
+ */
 export function saveStorageState(
     sessionPath: string,
     email: string,
@@ -143,6 +155,10 @@ export function clearStorageState(sessionPath: string, email: string, isMobile: 
         .run(Date.now(), email, platformOf(isMobile))
 }
 
+/**
+ * 保存指纹而保留已有 storage_state；参数中的 isMobile 区分移动与桌面记录。
+ * JSON 序列化是存储格式，不是加密，数据库文件不能公开上传。
+ */
 export function saveFingerprint(
     sessionPath: string,
     email: string,
@@ -182,6 +198,9 @@ export function saveResolvedRegion(sessionPath: string, email: string, region: s
         .run(email, region, Date.now())
 }
 
+/**
+ * 退出前尝试 WAL 检查点和关闭连接，再清空进程内引用；没有打开连接时直接返回。
+ */
 export function closeSessionStore(): void {
     if (!db) return
     try {

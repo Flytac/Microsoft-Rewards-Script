@@ -12,6 +12,10 @@ export function severityRank(level) {
     return SEVERITY[level] ?? 1
 }
 
+/**
+ * rawInput 是一行原始输出，source 区分 stdout/stderr；返回统一日志对象。
+ * 先移除 ANSI 颜色再匹配固定英文外壳；未匹配仍保留 raw/message，不丢弃未知输出。
+ */
 export function parseLogLine(rawInput, source = 'stdout') {
     const raw = stripAnsi(String(rawInput))
     const match = raw.match(LINE_RE)
@@ -95,6 +99,10 @@ function ensureAccount(state, email) {
     return state.accounts[email]
 }
 
+/**
+ * 这些正则依赖主程序英文消息和字段拼写，属于隐含的兼容协议。
+ * 中文界面应基于结构化字段做展示映射，不能直接翻译上游日志字符串。
+ */
 const RE = {
     runStart: /^Starting Microsoft Rewards Script \| v(\S+) \| Accounts: (\d+) \| Clusters: (\d+)/,
     accountStart:
@@ -342,6 +350,10 @@ function applyEdgeBrowsing(state, entry) {
     return 'edge-browsing'
 }
 
+/**
+ * state 为可变运行状态，entry 为已解析日志；根据事件更新账号、积分和完成状态。
+ * 这是从日志重建视图，不是再次向微软查询权威余额；未知日志不应被解释为成功。
+ */
 export function applyLogToRunState(state, entry) {
     const msg = entry.message ?? ''
 
@@ -507,6 +519,10 @@ function accountCollected(a) {
     return a.live?.gained ?? 0
 }
 
+/**
+ * 把内部状态整理成 API 返回摘要；与原始日志分离，供状态页和统计接口使用。
+ * 历史存于控制进程内存，重启后不会自动恢复。
+ */
 export function summarizeRunState(state) {
     const accounts = state.order.map(email => state.accounts[email])
     const collected = state.totals?.collected ?? accounts.reduce((sum, a) => sum + accountCollected(a), 0)

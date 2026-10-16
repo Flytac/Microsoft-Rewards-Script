@@ -25,6 +25,9 @@ function isAuthenticationPage(rawUrl: string): boolean {
     }
 }
 
+/**
+ * 按 BrowserContext 暂停已有拦截状态，不重复拆装路由；认证期间让媒体正常加载。
+ */
 export function suspendMediaBlocking(bot: MicrosoftRewardsBot, context: BrowserContext): void {
     const state = mediaBlockingState.get(context)
     if (!state?.enabled) return
@@ -37,6 +40,10 @@ export function suspendMediaBlocking(bot: MicrosoftRewardsBot, context: BrowserC
     )
 }
 
+/**
+ * 仅显式开启实验选项时安装/恢复 image、media 拦截。
+ * WeakMap 以上下文为键保存状态，不人为延长已释放上下文的生命周期；认证页面会被放行。
+ */
 export async function configureMediaBlocking(bot: MicrosoftRewardsBot, context: BrowserContext): Promise<void> {
     if (!bot.config.experimental.blockMedia) return
 

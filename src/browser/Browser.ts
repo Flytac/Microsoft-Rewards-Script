@@ -47,6 +47,10 @@ class Browser {
         this.userAgentManager = new UserAgentManager(bot)
     }
 
+    /**
+     * account 包含当前账号代理与指纹保存选项；返回 context 和实际使用的 fingerprint。
+     * 先启动 Chromium，再恢复会话并创建隔离上下文；第二阶段失败时主动关闭浏览器，避免遗留进程。
+     */
     async createBrowser(account: Account): Promise<BrowserCreationResult> {
         const headless = this.bot.config.headless
 
@@ -66,6 +70,9 @@ class Browser {
                   }
                 : undefined
 
+            /**
+             * 仅 Linux root 路径追加禁用沙箱参数；Windows 不应套用 Linux 容器的启动假设。
+             */
             const runningAsRoot = typeof process.getuid === 'function' && process.getuid() === 0
             const sandboxDisabled = process.platform === 'linux' && runningAsRoot
             const sandboxArgs = sandboxDisabled ? ['--no-sandbox', '--disable-setuid-sandbox'] : []
@@ -125,6 +132,9 @@ class Browser {
                 : account.saveFingerprint.desktop
 
             const savedFingerprint = shouldUseFingerprint ? session?.fingerprint : null
+            /**
+             * 保存的指纹必须与当前语言/地区兼容才复用；仅“存在历史记录”不足以决定复用。
+             */
             const reuseFingerprint =
                 savedFingerprint && fingerprintMatchesLocale(savedFingerprint, this.bot.accountLocale)
 
@@ -200,6 +210,10 @@ class Browser {
         }
     }
 
+    /**
+     * isMobile 决定手机或桌面配置；返回含请求头的指纹对象。
+     * 桌面 OS 跟随宿主平台，随后统一更新 User-Agent，避免浏览器标识内部不一致。
+     */
     async generateFingerprint(isMobile: boolean): Promise<BrowserFingerprintWithHeaders> {
         const hostOs: 'windows' | 'macos' | 'linux' =
             process.platform === 'darwin' ? 'macos' : process.platform === 'linux' ? 'linux' : 'windows'

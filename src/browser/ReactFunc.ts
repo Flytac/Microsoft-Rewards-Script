@@ -80,6 +80,10 @@ export default class ReactFunc {
     }
 
     // Parse all available data from the provided pages into one snapshot
+    /**
+     * html 可为一个页面或多个页面的源码；返回统一的 PageSnapshot，包含活动、账号和连续记录。
+     * 先解码 Next.js Flight 数据，再按职责解析，避免活动层各自抓取网页结构。
+     */
     public snapshotPage(html: string | readonly string[]): PageSnapshot {
         const combined = this.concatFlightChunks(html)
 
@@ -129,6 +133,10 @@ export default class ReactFunc {
         return Number.isSafeInteger(value) && value >= 0 ? value : null
     }
 
+    /**
+     * 提取 self.__next_f.push 中的字符串块，再用 JSON.parse 解码字符串转义并拼接。
+     * 网页源码并不等于一份完整 JSON；不能直接对整个 HTML 调用 JSON.parse。解析失败的块记录后跳过。
+     */
     private concatFlightChunks(html: string | readonly string[]): string {
         try {
             const pushRe = /self\.__next_f\.push\(\[1,\s*"((?:[^"\\]|\\.)*)"\]\)/g
@@ -186,6 +194,10 @@ export default class ReactFunc {
     }
 
     // Find every object containing "anchor" and return them as parsed JSON
+    /**
+     * combined 是拼接数据，anchor 是目标字段锚点；返回含该自有字段的对象列表。
+     * 从锚点向前找左括号，再跟踪字符串、反斜杠转义与括号深度，避免把字符串里的大括号当对象边界。
+     */
     private extractObjects(combined: string, anchor: string): Record<string, unknown>[] {
         const out: Record<string, unknown>[] = []
         const anchorKey = anchor.replace(/^"|"$/g, '')
@@ -568,6 +580,10 @@ export default class ReactFunc {
     }
 
     // Pull server-action ids out of a JS chunk
+    /**
+     * jsText 为当前站点脚本内容；提取服务端动作标识供 reportServerAction 使用。
+     * 这是对网站部署产物的适配，不是稳定公开 API；站点构建变化可能使提取失效。
+     */
     public extractActionIds(jsText: string): {
         byName: Record<string, string>
         all: string[]
