@@ -1,0 +1,192 @@
+// 仅供阅读的 JSONC 注释参考，不能直接改名为 config.json。
+// 所有字段及默认值与根 config.example.json 一致；正式运行请复制根 JSON。
+{
+    // 保存浏览器会话的目录
+    "sessionPath": "sessions",
+    // 是否隐藏浏览器窗口；Docker 中使用无头模式
+    "headless": false,
+    // 同时运行的账号集群数量，越大越占资源
+    "clusters": 1,
+    // 保存错误或未知登录页面的诊断资料
+    "errorDiagnostics": false,
+    // 尝试开启连续签到保护
+    "ensureStreakProtection": true,
+    // 自动领取已经完成的打卡卡片奖励
+    "autoClaimPunchcardRewards": false,
+    // 收到微软机器人评分警告后仍继续；上游不推荐开启。键名拼写就是 contintue，不要自行纠正
+    "contintueOnBotWarning": false,
+    // 跳过没有积分奖励的任务
+    "skipNonPointTasks": true,
+    // 账号切换等待
+    "accountDelay": {
+        // 开始下一个配置账号前的最短等待
+        "min": "1min",
+        // 开始下一个配置账号前的最长等待
+        "max": "3min"
+    },
+    // 任务类型开关
+    "workers": {
+        // 每日任务组
+        "doDailySet": true,
+        // 领取额外积分
+        "doClaimBonusPoints": true,
+        // 更多活动
+        "doMorePromotions": true,
+        // 打卡卡片任务
+        "doPunchCards": true,
+        // 移动应用活动
+        "doAppPromotions": true,
+        // 电脑端搜索
+        "doDesktopSearch": true,
+        // 移动端搜索
+        "doMobileSearch": true,
+        // 常规上限后的额外搜索任务
+        "doBonusSearches": false,
+        // 每日签到
+        "doDailyCheckIn": true,
+        // 阅读赚积分
+        "doReadToEarn": true,
+        // 出现搜索加成时激活，位于每日任务之后
+        "doActivateSearchPerk": true,
+        // 视觉搜索活动与连续记录
+        "doVisualSearch": false
+    },
+    // 活动处理开关
+    "activities": {
+        // 链接奖励类活动
+        "urlReward": true,
+        // ExploreOnBing 探索搜索活动
+        "searchOnBing": true
+    },
+    // ExploreOnBing 使用本地查询列表
+    "searchOnBingLocalQueries": false,
+    // 通用操作超时
+    "globalTimeout": "30sec",
+    // 搜索行为
+    "searchSettings": {
+        // 随机滚动搜索结果
+        "scrollRandomResults": false,
+        // 随机点击搜索结果链接
+        "clickRandomResults": false,
+        // 没有剩余搜索积分时仍搜索
+        "runOnZeroPoints": false,
+        // 开启 doBonusSearches 后，每轮最多额外搜索次数
+        "maxBonusSearches": 110,
+        // 电脑和移动搜索可并行
+        "parallelSearching": true,
+        // 按主题扩展 Bing 建议词并分组搜索
+        "clusterSearch": true,
+        // 搜索主题来源数组，具体来源见首页
+        "queryEngines": [
+            "google",
+            "wikipedia",
+            "wikirandom",
+            "hackernews",
+            "reddit",
+            "local",
+            "rss.googleTrends",
+            "rss.googleNews",
+            "rss.bbc",
+            "rss.guardian.world",
+            "rss.theVerge.all"
+        ],
+        // 每个搜索结果停留时间
+        "searchResultVisitTime": "10sec",
+        // 搜索间隔
+        "searchDelay": {
+            // 搜索间隔下限
+            "min": "30sec",
+            // 搜索间隔上限
+            "max": "1min"
+        },
+        // 阅读间隔
+        "readDelay": {
+            // 阅读等待下限
+            "min": "30sec",
+            // 阅读等待上限
+            "max": "1min"
+        }
+    },
+    // 实验功能，首次保持关闭
+    "experimental": {
+        // 实验性：通过 HTTP 完成 Bing 搜索
+        "apiSearch": false,
+        // 实验性：通过 HTTP 完成 ExploreOnBing，无法计分时可关闭退回浏览器路径
+        "apiSearchOnBing": false,
+        // 实验性：阻止浏览器图片与媒体请求；自动登录验证并保存会话后才启用，手动登录期间不启用
+        "blockMedia": false,
+        // 实验性：后台报告 Edge 浏览活动；前台活动结束后仍可能等待该任务完成
+        "edgeBrowsing": false
+    },
+    // 输出调试日志
+    "debugLogs": false,
+    // 控制台日志过滤
+    "consoleLogFilter": {
+        // 启用控制台日志过滤
+        "enabled": false,
+        // whitelist 为白名单，blacklist 为黑名单
+        "mode": "whitelist",
+        // 按日志级别过滤，如 error 错误、warn 警告
+        "levels": ["error", "warn"],
+        // 按原文关键词过滤，不要把关键词翻译成中文
+        "keywords": ["starting account", "Fraud_UserWarning_BotScore_UX"],
+        // 正则表达式过滤规则，在 JSON 中设置
+        "regexPatterns": []
+    },
+    // HTTP 查询代理与浏览器证书选项
+    "proxy": {
+        // 搜索主题来源 HTTP 请求使用账号 HTTP 代理；还需要 ACCOUNT_N_PROXY_HTTP=true 与有效代理信息
+        "queryEngine": true,
+        // 忽略浏览器 TLS 证书错误，会削弱证书验证；普通代理保持 false
+        "ignoreCertificateErrors": false
+    },
+    // 通知
+    "webhook": {
+        // Discord 通知
+        "discord": {
+            // 启用 Discord 通知
+            "enabled": false,
+            // Discord Webhook 地址
+            "url": ""
+        },
+        // Telegram 通知
+        "telegram": {
+            // 启用 Telegram 通知
+            "enabled": false,
+            // Telegram 机器人令牌
+            "botToken": "",
+            // 接收通知的聊天 ID
+            "chatId": ""
+        },
+        // ntfy 推送
+        "ntfy": {
+            // 启用 ntfy 推送
+            "enabled": false,
+            // ntfy 服务器地址
+            "url": "",
+            // ntfy 主题
+            "topic": "",
+            // ntfy 认证令牌
+            "token": "",
+            // 通知标题
+            "title": "Microsoft-Rewards-Script",
+            // 通知标签
+            "tags": ["bot", "notify"],
+            // 通知优先级，1 到 5
+            "priority": 3
+        },
+        // 通知过滤
+        "webhookLogFilter": {
+            // 启用通知日志过滤；ntfy 建议开启，否则可能每条日志都推送
+            "enabled": false,
+            // 通知过滤模式：白名单或黑名单
+            "mode": "whitelist",
+            // 通知的日志级别过滤条件
+            "levels": ["error"],
+            // 通知关键词过滤，保留英文原文以匹配日志
+            "keywords": ["starting account", "select number", "collected", "Fraud_UserWarning_BotScore_UX"],
+            // 通知正则过滤条件，在 JSON 中设置
+            "regexPatterns": []
+        }
+    }
+}

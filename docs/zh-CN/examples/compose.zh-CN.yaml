@@ -1,0 +1,74 @@
+# 中文注释版：有效字段和值与根 compose.yaml 一致
+# 阅读后如需使用，请先备份根 compose.yaml，再复制本文件到仓库根目录。
+# 不要直接在 docs 子目录启动：./config、./sessions、.env 都按 Compose 文件位置解析。
+services:
+    microsoft-rewards-script:
+        # 使用上游 v4 主版本镜像；Fork 不会自动改镜像来源
+        image: ghcr.io/thenetsky/microsoft-rewards-script:4
+        # 可选：改为自行构建时，按文档协调 image/build，而非只更新中文说明
+        #build:
+        #    context: .
+        container_name: microsoft-rewards-script
+        # 重启策略，不是每日定时；手动 stop 后保持停止
+        restart: unless-stopped
+        volumes:
+            # 持久化配置和可选 API 定时文件
+            - ./config:/usr/src/microsoft-rewards-script/config
+            # 持久化登录数据库，重建容器时保留
+            - ./sessions:/usr/src/microsoft-rewards-script/sessions
+        env_file:
+            # 从根 .env 传入账号与可选 API_TOKEN
+            - path: .env
+        environment:
+            # 上游默认多伦多时区；需要香港时间时明确改为 Asia/Hong_Kong
+            TZ: 'America/Toronto'
+            NODE_ENV: 'production'
+            # 五段 cron：在上面时区每天 07:00 触发；API 保存计划可能优先覆盖
+            CRON_SCHEDULE: '0 7 * * *'
+            # 每次容器启动额外运行一轮；入口为该首轮强制跳过随机等待
+            RUN_ON_START: 'true'
+            # 其他定时触发保留随机等待，默认下限 5、上限 50 分钟
+            SKIP_RANDOM_SLEEP: 'false'
+            #MIN_SLEEP_MINUTES: "5"
+            #MAX_SLEEP_MINUTES: "50"
+            # 卡住锁/触发流程相关超时阈值，不是通用网页操作超时
+            #STUCK_PROCESS_TIMEOUT_HOURS: "8"
+
+            # 可选 API；启用时必须设置自己的随机令牌并配置下方 ports
+            #API_MODE: 'true'
+            #API_TOKEN: '${API_TOKEN}'
+            # 可选能力分别控制，首次全部关闭，不要为了查看状态全开
+            #API_ALLOW_SCHEDULE_WRITE: 'true'
+            #API_ALLOW_ENV_OVERRIDES: 'true'
+            #API_ALLOW_CONFIG_REVEAL: 'true'
+            #API_ALLOW_CONFIG_WRITE: 'true'
+
+            # 可选行为覆盖，每次启动写入相应 config 字段
+            #CONFIG_CLUSTERS: '1'
+            #CONFIG_ACCOUNT_DELAY_MIN: '1min'
+            #CONFIG_ACCOUNT_DELAY_MAX: '3min'
+            # 机器人警告后继续：不推荐，键名拼写保持上游原样
+            #CONFIG_CONTINTUE_ON_BOT_WARNING: 'false'
+            # 认证后屏蔽媒体请求；实验功能，可能影响网页
+            #CONFIG_EXPERIMENTAL_BLOCK_MEDIA: 'false'
+            # Edge 后台活动，实验功能
+            #CONFIG_EXPERIMENTAL_EDGE_BROWSING: 'false'
+            # 关闭浏览器证书验证，普通代理应保持 false
+            #CONFIG_PROXY_IGNORE_CERTIFICATE_ERRORS: 'false'
+
+        # API 模式按用途启用；根示例端口如下
+        # 新手仅本机访问时更建议 '127.0.0.1:3010:3010'
+        #ports:
+        #    - '3010:3010'
+
+        healthcheck:
+            # 默认验证 cron；API 模式验证 /health，不验证登录/计分
+            test: ['CMD-SHELL', 'scripts/docker/healthcheck.sh']
+            interval: 60s
+            timeout: 5s
+            retries: 3
+            start_period: 30s
+
+        security_opt:
+            # 限制容器提权，不是防封保证
+            - no-new-privileges:true
